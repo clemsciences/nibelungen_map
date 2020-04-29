@@ -1,0 +1,14 @@
+{
+  "name": "nibelungen_map",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Clément Besnier",
+  "license": "ISC",
+  "dependencies": {
+    "leaflet": "^1.6.0"
+  }
+}
