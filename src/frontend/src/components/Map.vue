@@ -52,7 +52,8 @@
           newValue.forEach((value) => {
             console.log(value)
             if(value) {
-              L.marker([value.lat, value.lon]).addTo(this.theMap);
+              let marker = L.marker([value.lat, value.lon]).addTo(this.theMap);
+              marker.bindPopup(value.name);
             }
           });
         }
