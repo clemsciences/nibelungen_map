@@ -1,6 +1,23 @@
 <template>
-  <div class="mapclass">
-    <div id="map-id"></div>
+  <div>
+    <b-container>
+      <b-row >
+        <b-col cols="9">
+          <div class="mapclass">
+          <div id="map-id"></div>
+            </div>
+        </b-col>
+
+        <b-col cols="3">
+          <b-form-checkbox-group
+                  v-model="selected_places"
+                  :options="options"
+                  value-field="item"
+                  text-field="name">
+          </b-form-checkbox-group>
+        </b-col>
+      </b-row>
+    </b-container>
   </div>
 </template>
 
@@ -16,7 +33,14 @@
       return {
         theMap: null,
         markers: [],
-        places: []
+        loadedPlaces: [],
+        selected_places: [],
+        options: [
+          {item: 'city', name: "Cities"},
+          {item: "region_country", name: "Regions and countries"},
+          {item: "people", name: "Peoples"},
+          {item: "river", name: "Rivers"}
+        ]
       }
     },
     mounted() {
@@ -39,24 +63,43 @@
         this.theMap.setView([50, 6], 4);
 
       },
+      flushMap() {
+        console.log(this.markers.length);
+        this.markers.forEach(marker => {
+          marker.removeFrom(this.theMap);
+        });
+        this.markers = [];
+      },
       retrieveData() {
         axios.get('/places').then(
             (response) => {
-                this.places = response.data;
+                this.loadedPlaces = response.data;
         });
       },
+      displayPlaces(places, selectedPlaces) {
+        // console.log(selectedPlaces)
+        places.filter(place => {
+          return place != null && selectedPlaces.find(selectedPlace => place.placeType === selectedPlace);
+        }).forEach((value) => {
+          // console.log(value)
+          if(value) {
+            let marker = L.marker([value.lat, value.lon]).addTo(this.theMap);
+            marker.bindPopup(value.name);
+            this.markers.push(marker);
+          }
+        });
+      }
     },
     watch: {
       places: function(newValue) {
         if(newValue) {
-          newValue.forEach((value) => {
-            console.log(value)
-            if(value) {
-              let marker = L.marker([value.lat, value.lon]).addTo(this.theMap);
-              marker.bindPopup(value.name);
-            }
-          });
+          this.flushMap();
+          this.displayPlaces(newValue);
         }
+      },
+      selected_places: function(newValue) {
+        this.flushMap();
+        this.displayPlaces(this.loadedPlaces, newValue);
       }
     }
   }
@@ -73,6 +116,6 @@ a {
 }
 .mapclass {
   width: 800px;
-  height: 600px;
+  height: 550px;
 }
 </style>

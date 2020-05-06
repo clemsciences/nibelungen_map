@@ -1,2 +1,2 @@
-sigurd
+sigurd==1.2.1
 Flask

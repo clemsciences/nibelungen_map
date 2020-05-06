@@ -6,7 +6,8 @@ import json
 import os
 import time
 from typing import List, Dict
-from sigurd.nib_augsburg.nib_reader import read_places
+from sigurd.nib_augsburg.nib_reader import read_rivers, \
+    read_regions_and_countries, read_cities
 from src.data_management import PACKDIR
 
 import requests
@@ -14,14 +15,21 @@ import requests
 __author__ = ["Clément Besnier <clem@clementbesnier.fr>", ]
 
 
-def get_place_names():
+def make_dict_place(place_name: str, place_type: str) -> Dict[str, str]:
+    return {"name": place_name, "placeType": place_type}
+
+
+def get_places() -> List[Dict[str, str]]:
     """
-    >>> get_place_names()[0]
+    >>> get_places()[0]
     'Alzey'
 
     :return:
     """
-    place_names = [key for key in read_places()]
+    place_names = [make_dict_place(key, "river") for key in read_rivers()]
+    place_names.extend([make_dict_place(key, "region_country")
+                        for key in read_regions_and_countries()])
+    place_names.extend([make_dict_place(key, "city") for key in read_cities()])
     return place_names
 
 
@@ -35,7 +43,8 @@ def request_place(place_name: str) -> Dict[str, Dict[str, str]]:
     """
     name_to_coordinates = None
     res = requests.get("https://nominatim.openstreetmap.org/search",
-                       {"q": place_name, "format": "json", "accept-language": "de"})
+                       {"q": place_name, "format": "json",
+                        "accept-language": "de"})
     decoded_res = json.loads(res.content, encoding=res.encoding)
     if decoded_res and len(decoded_res) > 0:
         name_to_coordinates = {"lat": decoded_res[0]["lat"],
@@ -44,7 +53,7 @@ def request_place(place_name: str) -> Dict[str, Dict[str, str]]:
     return name_to_coordinates
 
 
-def get_places_to_coordinates(places: List[str]):
+def get_places_to_coordinates(places: List[Dict[str, str]]):
     """
     >>>
 
@@ -52,16 +61,18 @@ def get_places_to_coordinates(places: List[str]):
     :return:
     """
     places_to_coordinates = []
-    for place_name in places:
-        print(place_name)
-        places_to_coordinates.append(request_place(place_name))
+    for place in places:
+        located_place = request_place(place["name"])
+        if located_place:
+            located_place["placeType"] = place["placeType"]
+            places_to_coordinates.append(located_place)
         time.sleep(1)
     return places_to_coordinates
 
 
 def retrieve_and_save_places_to_coordinates():
-    place_names = get_place_names()
-    places_to_coordinates = get_places_to_coordinates(place_names)
+    places = get_places()
+    places_to_coordinates = get_places_to_coordinates(places)
     with codecs.open(os.path.join(PACKDIR, "data", "retrieved", "nibelungenlied_places.json"),
                      "wb", encoding="utf-8") as f:
         json.dump(places_to_coordinates, f)
