@@ -2,34 +2,111 @@
 
 """
 import codecs
+import enum
 import json
 import os
 import time
 from typing import List, Dict
-from sigurd.nib_augsburg.nib_reader import read_rivers, \
-    read_regions_and_countries, read_cities
+from sigurd.nib_augsburg.nib_reader import find_occurrences_in_text
+
 from src.data_management import PACKDIR
+
+from src.data_management.text_manager import NIBELUNGENLIED_TEXT, \
+    regions_and_countries, cities, rivers
 
 import requests
 
 __author__ = ["Clément Besnier <clem@clementbesnier.fr>", ]
 
 
-def make_dict_place(place_name: str, place_type: str) -> Dict[str, str]:
-    return {"name": place_name, "placeType": place_type}
+class Place(enum.Enum):
+    river = enum.auto()
+    region_country = enum.auto()
+    city = enum.auto()
+
+
+def make_dict_place(place_name: str, place_type: str, tokens: List[str]) \
+        -> Dict[str, str]:
+    return {"name": place_name, "placeType": place_type, "tokens": tokens}
+
+
+def extract_indices(indices: str, text, limit: int):
+    """
+    >>> extract_indices("1-1-1-1", NIBELUNGENLIED_TEXT, 3)
+    'UNS IST> In alten'
+
+    :param indices:
+    :param text:
+    :param limit:
+    :return:
+    """
+    assert 1 <= limit <= 4
+    chapter, line, half_line, token = indices.split("-")
+    if limit == 1:
+        return text[int(chapter)-1]
+    elif limit == 2:
+        return text[int(chapter)-1][int(line)-1]
+    elif limit == 3:
+        return text[int(chapter)-1][int(line)-1][int(half_line)-1]
+    elif limit == 4:
+        return text[int(chapter)-1][int(line)-1][int(half_line)-1][int(token)-1]
+
+
+def get_place_tokens(place_name: str, place_type: str) -> List[str]:
+    """
+    >>> get_place_tokens("Rhone", Place.river.name)
+    ['Roten']
+
+    :param place_name:
+    :param place_type:
+    :return:
+    """
+    place_tokens = []
+    if place_type == Place.river.name:
+        if place_name in rivers:
+            place_tokens = rivers[place_name]
+    elif place_type == Place.region_country.name:
+        if place_name in regions_and_countries:
+            place_tokens = regions_and_countries[place_name]
+    elif place_type == Place.city.name:
+        if place_name in cities:
+            place_tokens = cities[place_name]
+    return place_tokens
+
+
+def get_occurrences_lines(text, place_name, place_type):
+    """
+
+    >>> occurrences, lines = get_occurrences_lines(NIBELUNGENLIED_TEXT, "Rhone", Place.river.name)
+    >>> occurrences
+    ['31-410-1-2']
+
+    >>> lines
+    [['vonme Roten zv dem Rine', 'vf bi Elbe vnz an daz mer']]
+
+    :param text:
+    :param place_name:
+    :param place_type:
+    :return:
+    """
+    occurrences = find_occurrences_in_text(text, get_place_tokens(place_name, place_type))
+    lines = [extract_indices(index, text, 2) for index in occurrences]
+    return occurrences, lines
 
 
 def get_places() -> List[Dict[str, str]]:
     """
-    >>> get_places()[0]
-    'Alzey'
+    >>> get_places()[4]
+    {'name': 'Rhone', 'placeType': 'river', 'tokens': ['Roten']}
 
     :return:
     """
-    place_names = [make_dict_place(key, "river") for key in read_rivers()]
-    place_names.extend([make_dict_place(key, "region_country")
-                        for key in read_regions_and_countries()])
-    place_names.extend([make_dict_place(key, "city") for key in read_cities()])
+    place_names = [make_dict_place(key, "river", rivers[key]) for key in rivers]
+    place_names.extend([make_dict_place(key, "region_country",
+                                        regions_and_countries[key])
+                        for key in regions_and_countries])
+    place_names.extend([make_dict_place(key, "city", cities[key])
+                        for key in cities])
     return place_names
 
 
@@ -73,7 +150,8 @@ def get_places_to_coordinates(places: List[Dict[str, str]]):
 def retrieve_and_save_places_to_coordinates():
     places = get_places()
     places_to_coordinates = get_places_to_coordinates(places)
-    with codecs.open(os.path.join(PACKDIR, "data", "retrieved", "nibelungenlied_places.json"),
+    with codecs.open(os.path.join(PACKDIR, "data", "retrieved",
+                                  "nibelungenlied_places.json"),
                      "wb", encoding="utf-8") as f:
         json.dump(places_to_coordinates, f)
 

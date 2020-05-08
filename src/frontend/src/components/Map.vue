@@ -9,12 +9,20 @@
         </b-col>
 
         <b-col cols="3">
-          <b-form-checkbox-group
-                  v-model="selected_places"
-                  :options="options"
-                  value-field="item"
-                  text-field="name">
-          </b-form-checkbox-group>
+          <b-form-select v-model="selectedMode" :options="modeOptions">
+          </b-form-select>
+          <div v-if="selectedMode === 'placeType'">
+            <b-form-checkbox-group
+                    v-model="selected_places"
+                    :options="options"
+                    value-field="item"
+                    text-field="name">
+            </b-form-checkbox-group>
+          </div>
+          <div v-if="selectedMode === 'chapter'">
+            <label for="range-chapter">Selected chapter {{ selectedChapter }}</label>
+            <b-form-input id="range-chapter" v-model="selectedChapter" type="range" min="1" :max="textSize"></b-form-input>
+          </div>
         </b-col>
       </b-row>
     </b-container>
@@ -40,12 +48,20 @@
           {item: "region_country", name: "Regions and countries"},
           {item: "people", name: "Peoples"},
           {item: "river", name: "Rivers"}
+        ],
+        selectedChapter: 1,
+        textSize: 0,
+        selectedMode: "placeType",
+        modeOptions: [
+          {value: "placeType", text: "By place type"},
+          {value: "chapter", text: "By chapter"}
         ]
       }
     },
     mounted() {
       this.setMap();
       this.retrieveData();
+      this.retrieveTextSize();
 
       this.theMap.invalidateSize();
     },
@@ -71,12 +87,43 @@
         this.markers = [];
       },
       retrieveData() {
-        axios.get('/places').then(
+        axios.get('/places/').then(
             (response) => {
-                this.loadedPlaces = response.data;
+              if(response.data.result) {
+                this.loadedPlaces = response.data.result;
+              }
         });
       },
-      displayPlaces(places, selectedPlaces) {
+      retrieveOccurrences(placeType, placeName) {
+        console.log(placeName);
+        console.log(placeType);
+        return axios.post("/get-occurrences/",
+                {placeType, placeName}).then(
+                (response) => {
+                  if(!response.data.error && response.data.result) {
+                    return response.data.result;
+                  }
+                }
+        );
+      },
+      retrieveTextSize() {
+        axios.get("/text/size/").then(
+                (response) => {
+                  if(response.data.result) {
+                    this.textSize = response.data.result;
+                  }
+                }
+        )
+      },
+      retrievePlacesByChapter() {
+        return axios.post("/text/place-by-chapter/",
+                {chapter: this.selectedChapter}).then(
+                (response) => {
+                  return response.data.result;
+                }
+        )
+      },
+      displayPlacesByPlaceType(places, selectedPlaces) {
         // console.log(selectedPlaces)
         places.filter(place => {
           return place != null && selectedPlaces.find(selectedPlace => place.placeType === selectedPlace);
@@ -84,22 +131,70 @@
           // console.log(value)
           if(value) {
             let marker = L.marker([value.lat, value.lon]).addTo(this.theMap);
-            marker.bindPopup(value.name);
+            marker.on("click", () => {
+              this.retrieveOccurrences(value.placeType, value.name).then(
+                      (response) => {
+                        let occurrences = response;
+                        console.log(occurrences);
+                        let occurrencesText = occurrences.reduce((acc, currValue) => {
+                          return acc+currValue.occurrence+": "+currValue.line.join(" ")+";";
+                        }, "")
+                        let content = `<div class="own-popup" style="overflow-y: auto; height: 100px;"><h4>${ value.name }</h4>${occurrencesText}</div>`;
+                        L.popup()
+                        .setLatLng(marker.getLatLng())
+                        .setContent(content)
+                        .openOn(this.theMap);
+                      }
+              );
+            });
             this.markers.push(marker);
           }
         });
-      }
+      },
+      // displayPlacesByChapter(chapter) {
+      //   // console.log(selectedPlaces)
+      //   places.filter(place => {
+      //     return place != null && selectedPlaces.find(selectedPlace => place.placeType === selectedPlace);
+      //   }).forEach((value) => {
+      //     // console.log(value)
+      //     if(value) {
+      //       let marker = L.marker([value.lat, value.lon]).addTo(this.theMap);
+      //       marker.on("click", () => {
+      //         this.retrieveOccurrences(value.placeType, value.name).then(
+      //                 (response) => {
+      //                   let occurrences = response;
+      //                   console.log(occurrences);
+      //                   let occurrencesText = occurrences.reduce((acc, currValue) => {
+      //                     return acc+currValue.occurrence+": "+currValue.line.join(" ")+";";
+      //                   }, "")
+      //                   let content = `<div class="own-popup" style="overflow-y: auto; height: 100px;"><h4>${ value.name }</h4>${occurrencesText}</div>`;
+      //                   L.popup()
+      //                   .setLatLng(marker.getLatLng())
+      //                   .setContent(content)
+      //                   .openOn(this.theMap);
+      //                 }
+      //         );
+      //       });
+      //       this.markers.push(marker);
+      //     }
+      //   });
+      // }
     },
     watch: {
       places: function(newValue) {
         if(newValue) {
           this.flushMap();
-          this.displayPlaces(newValue);
+          this.displayPlacesByPlaceType(newValue);
         }
       },
       selected_places: function(newValue) {
         this.flushMap();
-        this.displayPlaces(this.loadedPlaces, newValue);
+        this.displayPlacesByPlaceType(this.loadedPlaces, newValue);
+      },
+      selectedChapter: function(newValue) {
+        this.flushMap();
+
+        this.displayPlacesByChapter(this.loadedPlaces, newValue);
       }
     }
   }
@@ -117,5 +212,10 @@ a {
 .mapclass {
   width: 800px;
   height: 550px;
+}
+.own-popup {
+  height: 100px;
+  overflow-y: scroll;
+  display: inline-block;
 }
 </style>
