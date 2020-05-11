@@ -2,7 +2,7 @@
 from flask import Flask, jsonify, request
 
 from src.data_management.text_manager import NIBELUNGENLIED_TEXT, \
-    get_text_size, find_places_mentionned_in_chapter
+    get_text_size, find_places_mentioned_in_chapter
 from src.data_management.place_manager import read_places_to_coordinates, \
     get_occurrences_lines
 
@@ -43,10 +43,12 @@ def get_text_size_json():
 @app.route("/text/place-by-chapter/", methods=["POST"])
 def get_places_in_chapter_json():
     data = request.get_json()
+    print(data)
     result = []
     if "chapter" in data:
         chapter = data["chapter"]
-        result = find_places_mentionned_in_chapter(int(chapter)-1)
+        result = find_places_mentioned_in_chapter(int(chapter) - 1)
+        print(result)
     return jsonify({"result": result})
 
 

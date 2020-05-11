@@ -21,17 +21,26 @@ def get_text_size():
     return len(NIBELUNGENLIED_TEXT)
 
 
-def find_places_mentionned_in_chapter(chapter: int) -> List[str]:
+def find_places_mentioned_in_chapter(chapter: int) -> List[str]:
+    """
+    >>> find_places_mentioned_in_chapter(1)
+    ['Xanten', 'Rhein']
+
+    :param chapter:
+    :return:
+    """
     places = []
     for line in NIBELUNGENLIED_TEXT[chapter]:
         for half_line in line:
             for river in rivers:
-                if river in half_line:
-                    places.append(river)
+                places.extend([river for river_token in rivers[river]
+                               if river_token in half_line])
             for city in cities:
-                if city in half_line:
-                    places.append(city)
+                places.extend([city for city_token in cities[city]
+                               if city_token in half_line])
             for region_country in regions_and_countries:
-                if region_country in half_line:
-                    places.append(region_country)
-    return places
+
+                places.extend([region_country
+                               for region_country_token in regions_and_countries[region_country]
+                               if region_country_token in half_line])
+    return list(set(places))
