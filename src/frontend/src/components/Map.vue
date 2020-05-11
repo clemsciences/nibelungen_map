@@ -1,7 +1,10 @@
 <template>
   <div>
     <b-container>
-      <b-row >
+      <b-row>
+        <h2>Nibelungenlied map</h2>
+      </b-row>
+      <b-row>
         <b-col cols="9">
           <div class="mapclass">
           <div id="map-id"></div>
@@ -46,7 +49,6 @@
         options: [
           {item: 'city', name: "Cities"},
           {item: "region_country", name: "Regions and countries"},
-          {item: "people", name: "Peoples"},
           {item: "river", name: "Rivers"}
         ],
         selectedChapter: 1,
@@ -124,11 +126,9 @@
         )
       },
       displayPlacesByPlaceType(places, selectedPlaces) {
-        // console.log(selectedPlaces)
         places.filter(place => {
           return place != null && selectedPlaces.find(selectedPlace => place.placeType === selectedPlace);
         }).forEach((value) => {
-          // console.log(value)
           if(value) {
             let marker = L.marker([value.lat, value.lon]).addTo(this.theMap);
             marker.on("click", () => {
@@ -151,34 +151,32 @@
           }
         });
       },
-      // displayPlacesByChapter(chapter) {
-      //   // console.log(selectedPlaces)
-      //   places.filter(place => {
-      //     return place != null && selectedPlaces.find(selectedPlace => place.placeType === selectedPlace);
-      //   }).forEach((value) => {
-      //     // console.log(value)
-      //     if(value) {
-      //       let marker = L.marker([value.lat, value.lon]).addTo(this.theMap);
-      //       marker.on("click", () => {
-      //         this.retrieveOccurrences(value.placeType, value.name).then(
-      //                 (response) => {
-      //                   let occurrences = response;
-      //                   console.log(occurrences);
-      //                   let occurrencesText = occurrences.reduce((acc, currValue) => {
-      //                     return acc+currValue.occurrence+": "+currValue.line.join(" ")+";";
-      //                   }, "")
-      //                   let content = `<div class="own-popup" style="overflow-y: auto; height: 100px;"><h4>${ value.name }</h4>${occurrencesText}</div>`;
-      //                   L.popup()
-      //                   .setLatLng(marker.getLatLng())
-      //                   .setContent(content)
-      //                   .openOn(this.theMap);
-      //                 }
-      //         );
-      //       });
-      //       this.markers.push(marker);
-      //     }
-      //   });
-      // }
+      displayPlacesByName(places, selectedPlaceNames) {
+        places.filter(place => {
+          return place != null && selectedPlaceNames.find(selectedPlace => place.name === selectedPlace);
+        }).forEach((value) => {
+          if(value) {
+            let marker = L.marker([value.lat, value.lon]).addTo(this.theMap);
+            marker.on("click", () => {
+              this.retrieveOccurrences(value.placeType, value.name).then(
+                      (response) => {
+                        let occurrences = response;
+                        console.log(occurrences);
+                        let occurrencesText = occurrences.reduce((acc, currValue) => {
+                          return acc+currValue.occurrence+": "+currValue.line.join(" ")+";";
+                        }, "")
+                        let content = `<div class="own-popup" style="overflow-y: auto; height: 100px;"><h4>${ value.name }</h4>${occurrencesText}</div>`;
+                        L.popup()
+                        .setLatLng(marker.getLatLng())
+                        .setContent(content)
+                        .openOn(this.theMap);
+                      }
+              );
+            });
+            this.markers.push(marker);
+          }
+        });
+      }
     },
     watch: {
       places: function(newValue) {
@@ -191,10 +189,22 @@
         this.flushMap();
         this.displayPlacesByPlaceType(this.loadedPlaces, newValue);
       },
-      selectedChapter: function(newValue) {
+      selectedChapter: function() {
         this.flushMap();
+        this.retrievePlacesByChapter().then((result => {
+          if(result) {
+            this.displayPlacesByName(this.loadedPlaces, result);
+          }
+        }));
+      },
+      selectedMode:function(newMode) {
+        this.flushMap();
+        if(newMode === "placeType") {
+          this.selected_places = [];
+        } else if(newMode === "chapter") {
+          this.selectedChapter = 1;
+        }
 
-        this.displayPlacesByChapter(this.loadedPlaces, newValue);
       }
     }
   }
