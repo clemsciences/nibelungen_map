@@ -1,22 +1,24 @@
 
 from flask import Flask, jsonify, request
 
+from nibelungen_map_server import create_app
 from nibelungen_map_server.text_manager import NIBELUNGENLIED_TEXT, \
     get_text_size, find_places_mentioned_in_chapter
 from nibelungen_map_server.place_manager import read_places_to_coordinates, \
     get_occurrences_lines
 
-app = Flask(__name__)
+
+nibelungen_map = create_app()
 
 
-@app.route("/places/")
+@nibelungen_map.route("/places/")
 def get_places():
     places_to_coordinates = read_places_to_coordinates()
     print(places_to_coordinates)
     return jsonify({"result": places_to_coordinates})
 
 
-@app.route("/get-occurrences/", methods=["POST"])
+@nibelungen_map.route("/get-occurrences/", methods=["POST"])
 def get_occurrences():
     data = request.get_json()
     if "placeType" in data:
@@ -35,12 +37,12 @@ def get_occurrences():
     return jsonify({"result": result})
 
 
-@app.route("/text/size/")
+@nibelungen_map.route("/text/size/")
 def get_text_size_json():
     return jsonify({"result": get_text_size()})
 
 
-@app.route("/text/place-by-chapter/", methods=["POST"])
+@nibelungen_map.route("/text/place-by-chapter/", methods=["POST"])
 def get_places_in_chapter_json():
     data = request.get_json()
     print(data)
@@ -53,4 +55,4 @@ def get_places_in_chapter_json():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5011)
+    nibelungen_map.run(debug=True, port=5011)
