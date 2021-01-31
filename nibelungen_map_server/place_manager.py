@@ -9,9 +9,9 @@ import time
 from typing import List, Dict
 from sigurd.nib_augsburg.nib_reader import find_occurrences_in_text
 
-from src.data_management import PACKDIR
+from nibelungen_map_server import PACKDIR
 
-from src.data_management.text_manager import NIBELUNGENLIED_TEXT, \
+from nibelungen_map_server.text_manager import NIBELUNGENLIED_TEXT, \
     regions_and_countries, cities, rivers
 
 import requests

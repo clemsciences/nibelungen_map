@@ -36,7 +36,12 @@
   import 'leaflet/dist/leaflet.css';
   import L from 'leaflet';
   import axios from 'axios';
-  axios.defaults.baseURL = "http://localhost:5000";
+  // axios.defaults.baseURL = "http://localhost:5011";
+  // console.log(location.protocol);
+  // console.log(location.hostname);
+  // console.log(process.env.VUE_APP_NIBELUNGEN_MAP_PATH);
+  // console.log(process.env.VUE_APP_NIBELUNGEN_MAP_DATA_PORT);
+  axios.defaults.baseURL = location.protocol + '//' + location.hostname + ':' + process.env.VUE_APP_NIBELUNGEN_MAP_DATA_PORT;
 
   export default {
     name: 'Map',
@@ -94,7 +99,9 @@
               if(response.data.result) {
                 this.loadedPlaces = response.data.result;
               }
-        });
+        }).catch(
+            (reason => console.log(reason))
+        );
       },
       retrieveOccurrences(placeType, placeName) {
         console.log(placeName);
@@ -106,6 +113,8 @@
                     return response.data.result;
                   }
                 }
+        ).catch(
+            (reason => console.log(reason))
         );
       },
       retrieveTextSize() {
@@ -115,6 +124,8 @@
                     this.textSize = response.data.result;
                   }
                 }
+        ).catch(
+            (reason => console.log(reason))
         )
       },
       retrievePlacesByChapter() {
@@ -123,6 +134,8 @@
                 (response) => {
                   return response.data.result;
                 }
+        ).catch(
+            (reason => console.log(reason))
         )
       },
       displayPlacesByPlaceType(places, selectedPlaces) {
@@ -145,6 +158,8 @@
                         .setContent(content)
                         .openOn(this.theMap);
                       }
+              ).catch(
+                  (reason => console.log(reason))
               );
             });
             this.markers.push(marker);
@@ -171,6 +186,8 @@
                         .setContent(content)
                         .openOn(this.theMap);
                       }
+              ).catch(
+                  (reason => console.log(reason))
               );
             });
             this.markers.push(marker);

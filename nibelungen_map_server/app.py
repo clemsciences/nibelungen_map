@@ -1,9 +1,9 @@
 
 from flask import Flask, jsonify, request
 
-from src.data_management.text_manager import NIBELUNGENLIED_TEXT, \
+from nibelungen_map_server.text_manager import NIBELUNGENLIED_TEXT, \
     get_text_size, find_places_mentioned_in_chapter
-from src.data_management.place_manager import read_places_to_coordinates, \
+from nibelungen_map_server.place_manager import read_places_to_coordinates, \
     get_occurrences_lines
 
 app = Flask(__name__)
@@ -53,4 +53,4 @@ def get_places_in_chapter_json():
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True, port=5011)
