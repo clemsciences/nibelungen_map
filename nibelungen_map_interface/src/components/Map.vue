@@ -36,12 +36,6 @@
   import 'leaflet/dist/leaflet.css';
   import L from 'leaflet';
   import axios from 'axios';
-  // axios.defaults.baseURL = "http://localhost:5011";
-  // console.log(location.protocol);
-  // console.log(location.hostname);
-  // console.log(process.env.VUE_APP_NIBELUNGEN_MAP_PATH);
-  // console.log(process.env.VUE_APP_NIBELUNGEN_MAP_DATA_PORT);
-  axios.defaults.baseURL = location.protocol + '//' + location.hostname + ':' + process.env.VUE_APP_NIBELUNGEN_MAP_DATA_PORT;
 
   export default {
     name: 'Map',

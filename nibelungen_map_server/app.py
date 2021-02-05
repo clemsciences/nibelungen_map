@@ -1,14 +1,14 @@
 
 from flask import Flask, jsonify, request
 
-from nibelungen_map_server import create_app
+from nibelungen_map_server import create_app, nibelungen_map
 from nibelungen_map_server.text_manager import NIBELUNGENLIED_TEXT, \
     get_text_size, find_places_mentioned_in_chapter
 from nibelungen_map_server.place_manager import read_places_to_coordinates, \
     get_occurrences_lines
 
 
-nibelungen_map = create_app()
+app = create_app()
 
 
 @nibelungen_map.route("/places/")
@@ -55,4 +55,5 @@ def get_places_in_chapter_json():
 
 
 if __name__ == "__main__":
-    nibelungen_map.run(debug=True, port=5011)
+    app.register_blueprint(nibelungen_map, url_prefix="/nibelungen-map")
+    app.run(debug=True, port=5011)

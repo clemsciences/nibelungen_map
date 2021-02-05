@@ -1,4 +1,4 @@
-# frontend
+# nibelungen_map_interface
 
 ## Project setup
 ```
