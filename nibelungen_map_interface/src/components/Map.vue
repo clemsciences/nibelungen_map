@@ -1,18 +1,15 @@
 <template>
-  <div>
+  <div id="all-map">
     <b-container>
       <b-row>
-        <h2>Nibelungenlied map</h2>
+        <h2 class="m-3">Nibelungenlied map</h2>
       </b-row>
       <b-row>
-        <b-col cols="9">
-          <div class="mapclass">
-          <div id="map-id"></div>
-            </div>
-        </b-col>
-
-        <b-col cols="3">
-          <b-form-select v-model="selectedMode" :options="modeOptions">
+        <p class="m-3">You can select places by type with checkboxes and by chapter with a slider.</p>
+      </b-row>
+      <b-row>
+        <b-col sm="12" md="3" class="m-3">
+          <b-form-select class="my-2" v-model="selectedMode" :options="modeOptions">
           </b-form-select>
           <div v-if="selectedMode === 'placeType'">
             <b-form-checkbox-group
@@ -27,6 +24,16 @@
             <b-form-input id="range-chapter" v-model="selectedChapter" type="range" min="1" :max="textSize"></b-form-input>
           </div>
         </b-col>
+      </b-row>
+      <b-row>
+        <b-col class="m-3">
+          <div class="mapclass">
+          <div id="map-id"></div>
+            </div>
+        </b-col>
+      </b-row>
+      <b-row class="mx-3">
+        By Clément Besnier - 06/02/2021
       </b-row>
     </b-container>
   </div>
@@ -229,6 +236,7 @@ a {
 #map-id {
   width: 100%;
   height: calc(100%);
+  z-index: 800;
 }
 .mapclass {
   width: 800px;
@@ -238,5 +246,9 @@ a {
   height: 100px;
   overflow-y: scroll;
   display: inline-block;
+}
+
+#all-map {
+  background-color: white;
 }
 </style>
