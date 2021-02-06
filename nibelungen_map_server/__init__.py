@@ -3,7 +3,7 @@ import os
 
 from flask import Blueprint, Flask, jsonify
 
-PACKDIR = os.getcwd()
+PACKDIR = os.path.abspath(os.path.dirname(__file__))
 
 nibelungen_map = Blueprint('nibelungen_map', __name__)
 
