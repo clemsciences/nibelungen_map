@@ -55,5 +55,5 @@ def get_places_in_chapter_json():
 
 
 if __name__ == "__main__":
-    app.register_blueprint(nibelungen_map, url_prefix="/nibelungen-map")
+    app.register_blueprint(nibelungen_map, url_prefix="/nibelungen-map/api")
     app.run(debug=True, port=5011)

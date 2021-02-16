@@ -1,5 +1,4 @@
 module.exports = {
-    publicPath: "/nibelungen-map"
-
+    publicPath: process.env.VUE_APP_SITE_URL
 }
 
