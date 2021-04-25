@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "build": "vue-cli-service build --dest nibelungen-map-dist",
+    "zip": "tar.exe -a -c -f nibelungen-map.zip nibelungen-map-dist",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {

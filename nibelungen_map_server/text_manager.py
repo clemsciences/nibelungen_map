@@ -23,8 +23,8 @@ def get_text_size():
 
 def find_places_mentioned_in_chapter(chapter: int) -> List[str]:
     """
-    >>> find_places_mentioned_in_chapter(1)
-    ['Xanten', 'Rhein']
+    >>> sorted(find_places_mentioned_in_chapter(1))
+    ['Rhein', 'Xanten']
 
     :param chapter:
     :return:

@@ -113,7 +113,7 @@ def get_places() -> List[Dict[str, str]]:
 def request_place(place_name: str) -> Dict[str, Dict[str, str]]:
     """
     >>> request_place("Xanten")
-    {'Xanten': {'lat': '51.661519', 'lon': '6.4543203'}}
+    {'lat': '51.661519', 'lon': '6.4543203', 'name': 'Xanten'}
 
     :param place_name: name of the place
     :return:
