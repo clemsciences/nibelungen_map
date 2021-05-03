@@ -1,7 +1,7 @@
 
-from flask import Flask, jsonify, request
+from flask import jsonify, request
 
-from nibelungen_map_server import create_app, nibelungen_map
+from nibelungen_map_server import nibelungen_map
 from nibelungen_map_server.text_manager import NIBELUNGENLIED_TEXT, \
     get_text_size, find_places_mentioned_in_chapter
 from nibelungen_map_server.place_manager import read_places_to_coordinates, \

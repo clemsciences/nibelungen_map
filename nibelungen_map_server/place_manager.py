@@ -71,7 +71,7 @@ def get_place_tokens(place_name: str, place_type: str) -> List[str]:
     elif place_type == Place.city.name:
         if place_name in cities:
             place_tokens = cities[place_name]
-    return place_tokens
+    return [t.strip() for t in place_tokens]
 
 
 def get_occurrences_lines(text, place_name, place_type):
@@ -79,7 +79,7 @@ def get_occurrences_lines(text, place_name, place_type):
 
     >>> occurrences, lines = get_occurrences_lines(NIBELUNGENLIED_TEXT, "Rhone", Place.river.name)
     >>> occurrences
-    ['31-410-1-2']
+    ['20-410-1-2']
 
     >>> lines
     [['vonme Roten zv dem Rine', 'vf bi Elbe vnz an daz mer']]
