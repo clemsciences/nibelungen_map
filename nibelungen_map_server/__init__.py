@@ -8,7 +8,7 @@ PACKDIR = os.path.abspath(os.path.dirname(__file__))
 nibelungen_map = Blueprint('nibelungen_map', __name__)
 
 
-def create_app(blueprint, url_prefix="/nibelungen-map"):
+def create_app(blueprint, url_prefix):
     app = Flask(__name__)
     app.secret_key = "anagramme"
 
