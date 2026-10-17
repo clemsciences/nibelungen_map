@@ -1,0 +1,55 @@
+[project]
+name = "nibelungen-map-server"
+version = "0.1.0"
+description = "JSON API serving the places mentioned in the Nibelungenlied"
+readme = "README.md"
+authors = [{ name = "Clément Besnier", email = "clem@clementbesnier.fr" }]
+requires-python = ">=3.10"
+dependencies = [
+    "flask>=3.0",
+    "flask-cors>=5.0",
+    "requests>=2.31",
+    "sigurd>=1.2.13",
+    # Only sigurd.nib_augsburg is used: it needs lxml and BeautifulSoup
+    "lxml>=5.0",
+    "beautifulsoup4>=4.12",
+]
+
+[project.optional-dependencies]
+# Production WSGI server (used by the Dockerfile)
+deploy = ["gunicorn>=23"]
+
+[project.scripts]
+nibelungen-map-server = "nibelungen_map_server.app:main"
+nibelungen-map-geocode = "nibelungen_map_server.place_manager:retrieve_and_save_places_to_coordinates"
+
+[project.urls]
+Homepage = "https://www.clementbesnier.eu/"
+
+[build-system]
+requires = ["uv_build>=0.9.21,<0.14"]
+build-backend = "uv_build"
+
+[tool.uv]
+required-version = ">=0.9"
+# sigurd declares dependencies for all its sub-packages; only sigurd.nib_augsburg is used here.
+# Exclude the unused ones: they are heavy and gensim doesn't build on Python 3.14.
+exclude-dependencies = [
+    "cltk",
+    "gensim",
+    "jupyter",
+    "matplotlib",
+    "networkx",
+    "nltk",
+    "norsecorpus",
+    "numpy",
+    "pypdf2",
+    "scikit-learn",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules"
+testpaths = ["src/nibelungen_map_server"]

@@ -3,7 +3,7 @@ from flask import jsonify, request
 
 from nibelungen_map_server import nibelungen_map
 from nibelungen_map_server.text_manager import NIBELUNGENLIED_TEXT, \
-    get_text_size, find_places_mentioned_in_chapter
+    get_text_size, find_places_mentioned_in_chapter, annotate_chapter
 from nibelungen_map_server.place_manager import read_places_to_coordinates, \
     get_occurrences_lines
 
@@ -50,3 +50,16 @@ def get_places_in_chapter_json():
         print(result)
     return jsonify({"result": result})
 
+
+
+@nibelungen_map.route("/text/chapter/", methods=["POST"])
+def get_annotated_chapter_json():
+    data = request.get_json()
+    if not data or "chapter" not in data:
+        return jsonify({"error": True})
+    chapter = int(data["chapter"])
+    if not 1 <= chapter <= get_text_size():
+        return jsonify({"error": True})
+    places_to_coordinates = read_places_to_coordinates() or []
+    located_place_names = [place["name"] for place in places_to_coordinates]
+    return jsonify({"result": annotate_chapter(chapter - 1, located_place_names)})
