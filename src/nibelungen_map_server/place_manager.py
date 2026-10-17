@@ -1,7 +1,6 @@
 """
 
 """
-import codecs
 import enum
 import json
 import os
@@ -121,8 +120,10 @@ def request_place(place_name: str) -> Dict[str, Dict[str, str]]:
     name_to_coordinates = None
     res = requests.get("https://nominatim.openstreetmap.org/search",
                        {"q": place_name, "format": "json",
-                        "accept-language": "de"})
-    decoded_res = json.loads(res.content, encoding=res.encoding)
+                        "accept-language": "de"},
+                       headers={"User-Agent": "nibelungen-map (https://www.clementbesnier.eu/)"})
+    res.raise_for_status()
+    decoded_res = res.json()
     if decoded_res and len(decoded_res) > 0:
         name_to_coordinates = {"lat": decoded_res[0]["lat"],
                                "lon": decoded_res[0]["lon"],
@@ -150,9 +151,9 @@ def get_places_to_coordinates(places: List[Dict[str, str]]):
 def retrieve_and_save_places_to_coordinates():
     places = get_places()
     places_to_coordinates = get_places_to_coordinates(places)
-    with codecs.open(os.path.join(PACKDIR, "data", "retrieved",
-                                  "nibelungenlied_places.json"),
-                     "wb", encoding="utf-8") as f:
+    with open(os.path.join(PACKDIR, "data", "retrieved",
+                           "nibelungenlied_places.json"),
+              "w", encoding="utf-8") as f:
         json.dump(places_to_coordinates, f)
 
 
@@ -165,8 +166,7 @@ def read_places_to_coordinates():
     print(path_and_filename)
     if os.path.exists(path_and_filename):
         print("ok")
-        with codecs.open(path_and_filename,
-                         "rb", encoding="utf-8") as f:
+        with open(path_and_filename, "r", encoding="utf-8") as f:
             return json.load(f)
     return None
 
