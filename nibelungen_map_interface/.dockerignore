@@ -1,0 +1,4 @@
+node_modules
+nibelungen-map-dist
+Dockerfile
+.dockerignore
