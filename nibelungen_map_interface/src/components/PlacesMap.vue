@@ -1,45 +1,46 @@
 <template>
   <div id="all-map">
-    <b-container>
-      <b-row>
+    <BContainer>
+      <BRow>
         <p class="m-3">You can select places by type with checkboxes and by chapter with a slider.</p>
-      </b-row>
-      <b-row>
-        <b-col sm="12" md="3" class="m-3">
-          <b-form-select class="my-2" v-model="selectedMode" :options="modeOptions">
-          </b-form-select>
+      </BRow>
+      <BRow>
+        <BCol sm="12" md="3" class="m-3">
+          <BFormSelect class="my-2" v-model="selectedMode" :options="modeOptions">
+          </BFormSelect>
           <div v-if="selectedMode === 'placeType'">
-            <b-form-checkbox-group
+            <BFormCheckboxGroup
+                    id="place-types"
                     v-model="selected_places"
                     :options="options"
                     value-field="item"
                     text-field="name">
-            </b-form-checkbox-group>
+            </BFormCheckboxGroup>
           </div>
           <div v-if="selectedMode === 'chapter'">
             <label for="range-chapter">Selected chapter {{ selectedChapter }}</label>
-            <b-form-input id="range-chapter" v-model="selectedChapter" type="range" min="1" :max="textSize"></b-form-input>
+            <BFormInput id="range-chapter" v-model.number="selectedChapter" type="range" min="1" :max="textSize"></BFormInput>
           </div>
-        </b-col>
-      </b-row>
-      <b-row>
-        <b-col class="m-3">
+        </BCol>
+      </BRow>
+      <BRow>
+        <BCol class="m-3">
           <div class="mapclass">
           <div id="map-id"></div>
             </div>
-        </b-col>
-      </b-row>
-    </b-container>
+        </BCol>
+      </BRow>
+    </BContainer>
   </div>
 </template>
 
 <script>
-  import 'leaflet/dist/leaflet.css';
+  import { markRaw } from 'vue';
   import L from 'leaflet';
   import axios from 'axios';
 
   export default {
-    name: 'Map',
+    name: 'PlacesMap',
     data: function() {
       return {
         theMap: null,
@@ -70,11 +71,12 @@
 
     methods: {
       setMap() {
-        this.theMap = L.map("map-id", {
+        // Leaflet objects must not be wrapped in Vue reactive proxies
+        this.theMap = markRaw(L.map("map-id", {
           zoomControl: true,
           zoomDelta: 0.25,
           zoomSnap: 0
-        });
+        }));
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                 {attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'})
         .addTo(this.theMap);
@@ -133,61 +135,49 @@
             (reason => console.log(reason))
         )
       },
+      addPlaceMarker(place) {
+        let marker = markRaw(L.marker([place.lat, place.lon]).addTo(this.theMap));
+        marker.on("click", () => {
+          this.retrieveOccurrences(place.placeType, place.name).then(
+                  (response) => {
+                    let occurrences = response || [];
+                    let occurrencesText = occurrences.reduce((acc, currValue) => {
+                      return acc+currValue.occurrence+": "+currValue.line.join(" ")+";";
+                    }, "")
+                    let content = `<div class="own-popup" style="overflow-y: auto; height: 100px;"><h4>${ place.name }</h4>${occurrencesText}</div>`;
+                    L.popup()
+                    .setLatLng(marker.getLatLng())
+                    .setContent(content)
+                    .openOn(this.theMap);
+                  }
+          ).catch(
+              (reason => console.log(reason))
+          );
+        });
+        this.markers.push(marker);
+        return marker;
+      },
       displayPlacesByPlaceType(places, selectedPlaces) {
         places.filter(place => {
           return place != null && selectedPlaces.find(selectedPlace => place.placeType === selectedPlace);
-        }).forEach((value) => {
-          if(value) {
-            let marker = L.marker([value.lat, value.lon]).addTo(this.theMap);
-            marker.on("click", () => {
-              this.retrieveOccurrences(value.placeType, value.name).then(
-                      (response) => {
-                        let occurrences = response;
-                        console.log(occurrences);
-                        let occurrencesText = occurrences.reduce((acc, currValue) => {
-                          return acc+currValue.occurrence+": "+currValue.line.join(" ")+";";
-                        }, "")
-                        let content = `<div class="own-popup" style="overflow-y: auto; height: 100px;"><h4>${ value.name }</h4>${occurrencesText}</div>`;
-                        L.popup()
-                        .setLatLng(marker.getLatLng())
-                        .setContent(content)
-                        .openOn(this.theMap);
-                      }
-              ).catch(
-                  (reason => console.log(reason))
-              );
-            });
-            this.markers.push(marker);
-          }
-        });
+        }).forEach(place => this.addPlaceMarker(place));
       },
       displayPlacesByName(places, selectedPlaceNames) {
         places.filter(place => {
           return place != null && selectedPlaceNames.find(selectedPlace => place.name === selectedPlace);
-        }).forEach((value) => {
-          if(value) {
-            let marker = L.marker([value.lat, value.lon]).addTo(this.theMap);
-            marker.on("click", () => {
-              this.retrieveOccurrences(value.placeType, value.name).then(
-                      (response) => {
-                        let occurrences = response;
-                        console.log(occurrences);
-                        let occurrencesText = occurrences.reduce((acc, currValue) => {
-                          return acc+currValue.occurrence+": "+currValue.line.join(" ")+";";
-                        }, "")
-                        let content = `<div class="own-popup" style="overflow-y: auto; height: 100px;"><h4>${ value.name }</h4>${occurrencesText}</div>`;
-                        L.popup()
-                        .setLatLng(marker.getLatLng())
-                        .setContent(content)
-                        .openOn(this.theMap);
-                      }
-              ).catch(
-                  (reason => console.log(reason))
-              );
-            });
-            this.markers.push(marker);
-          }
-        });
+        }).forEach(place => this.addPlaceMarker(place));
+      },
+      // Called from the digital edition when a place name is clicked
+      focusPlace(placeName) {
+        let place = this.loadedPlaces.find(loadedPlace => loadedPlace != null && loadedPlace.name === placeName);
+        if(!place) {
+          return false;
+        }
+        this.flushMap();
+        let marker = this.addPlaceMarker(place);
+        this.theMap.flyTo(marker.getLatLng(), Math.max(this.theMap.getZoom(), 6));
+        marker.fire("click");
+        return true;
       }
     },
     watch: {
@@ -233,7 +223,7 @@ a {
   z-index: 800;
 }
 .mapclass {
-  width: 800px;
+  width: 100%;
   height: 550px;
 }
 .own-popup {

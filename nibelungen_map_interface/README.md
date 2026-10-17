@@ -5,20 +5,23 @@
 yarn install
 ```
 
+Requires Node.js 20.19+ or 22.13+.
+
 ### Compiles and hot-reloads for development
 ```
-yarn serve
+yarn dev
 ```
 
 ### Compiles and minifies for production
 ```
 yarn build
 ```
+Output goes to `nibelungen-map-dist/`.
 
-### Lints and fixes files
+### Lints files
 ```
 yarn lint
 ```
 
 ### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+See [Vite Configuration Reference](https://vite.dev/config/).
